@@ -8,13 +8,14 @@ const router = express.Router();
  * GET ALL ORDERS (KASIR)
  * ==========================
  */
-router.get("/", (req, res) => {
+router.get("/", async (req, res) => {
   const sql = `
     SELECT
       o.order_id,
       o.customer_name,
       o.table_number,
       o.payment_method,
+      o.order_type,
       o.total_price,
       o.order_status,
       o.order_date,
@@ -27,12 +28,8 @@ router.get("/", (req, res) => {
     ORDER BY o.order_date DESC, o.order_id DESC
   `;
 
-  db.query(sql, (err, rows) => {
-    if (err) {
-      console.error("DB ERROR:", err);
-      return res.status(500).json({ message: "Database error" });
-    }
-
+  try {
+    const [rows] = await db.query(sql);
     const ordersMap = {};
 
     rows.forEach((row) => {
@@ -42,6 +39,7 @@ router.get("/", (req, res) => {
           customer_name: row.customer_name,
           table_number: row.table_number,
           payment_method: row.payment_method,
+          order_type: row.order_type,
           total_price: row.total_price,
           order_status: row.order_status,
           order_date: row.order_date,
@@ -59,7 +57,10 @@ router.get("/", (req, res) => {
     });
 
     res.json(Object.values(ordersMap));
-  });
+  } catch (err) {
+    console.error("DB ERROR:", err);
+    res.status(500).json({ message: "Database error" });
+  }
 });
 
 /**
@@ -68,10 +69,16 @@ router.get("/", (req, res) => {
  * ==========================
  */
 router.post("/", async (req, res) => {
-  const { customer_name, table_number, payment_method, items } = req.body;
+  const { customer_name, table_number, payment_method, items, order_type } = req.body;
 
-  if (!customer_name || !table_number || !payment_method || !items?.length) {
+  // 1. Validasi Dasar
+  if (!customer_name || !payment_method || !order_type || !items?.length) {
     return res.status(400).json({ message: "Data tidak lengkap" });
+  }
+
+  // 2. Validasi Khusus Dine In
+  if (order_type === "dine_in" && !table_number) {
+    return res.status(400).json({ message: "Nomor meja wajib untuk dine in" });
   }
 
   const totalPrice = items.reduce(
@@ -80,21 +87,28 @@ router.post("/", async (req, res) => {
   );
 
   try {
-    // 1️⃣ Insert order
-    const [orderResult] = await db.promise().query(
+    // 3. Insert order
+    const [orderResult] = await db.query(
       `
       INSERT INTO orders 
-      (customer_name, table_number, payment_method, total_price, order_status)
-      VALUES (?, ?, ?, ?, ?)
+      (customer_name, table_number, payment_method, order_type, total_price, order_status)
+      VALUES (?, ?, ?, ?, ?, ?)
       `,
-      [customer_name, table_number, payment_method, totalPrice, "pending"],
+      [
+        customer_name, 
+        order_type === "dine_in" ? table_number : null,
+        payment_method,
+        order_type,
+        totalPrice,
+        "pending"
+      ],
     );
 
     const orderId = orderResult.insertId;
 
-    // 2️⃣ Insert item detail
+    // 4. Insert item detail
     for (const item of items) {
-      await db.promise().query(
+      await db.query(
         `
         INSERT INTO order_details
         (order_id, product_id, quantity, price)
@@ -117,23 +131,29 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.get("/history", (req, res) => {
+/**
+ * HISTORY ORDERS
+ */
+router.get("/history", async (req, res) => {
   const sql = `
     SELECT * FROM orders
     WHERE order_status = 'completed'
     ORDER BY completed_at DESC
   `;
 
-  db.query(sql, (err, result) => {
-    if (err) return res.status(500).json(err);
+  try {
+    const [result] = await db.query(sql);
     res.json(result);
-  });
+  } catch (err) {
+    console.error("HISTORY ERROR:", err);
+    res.status(500).json({ message: "Database error" });
+  }
 });
 
 /**
  * UPDATE ORDER TO COMPLETED
  */
-router.put("/:id/complete", (req, res) => {
+router.put("/:id/complete", async (req, res) => {
   const { id } = req.params;
 
   const sql = `
@@ -143,9 +163,13 @@ router.put("/:id/complete", (req, res) => {
     WHERE order_id = ?
   `;
 
-  db.query(sql, [id], (err) => {
-    if (err) return res.status(500).json(err);
+  try {
+    await db.query(sql, [id]);
     res.json({ message: "Order completed" });
-  });
+  } catch (err) {
+    console.error("UPDATE ERROR:", err);
+    res.status(500).json({ message: "Gagal update status" });
+  }
 });
+
 export default router;

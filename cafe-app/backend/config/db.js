@@ -1,15 +1,18 @@
-import mysql from "mysql2"
+import mysql from "mysql2/promise"; // Tambahkan /promise di sini
+import dotenv from "dotenv";
+dotenv.config();
 
-const db = mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    password: "",
-    database: "cafe_db"
-})
+const db = mysql.createPool({
+  host: "localhost",
+  user: "root",
+  password: "", // Sesuaikan password database Anda
+  database: "cafe_db", // Ganti dengan nama database Anda
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
+});
 
-db.connect(err => {
-    if(err) throw err;
-    console.log("MySQL Connected")
-})
+// Cek koneksi
+console.log("Database Pool initialized...");
 
-export default db
+export default db;

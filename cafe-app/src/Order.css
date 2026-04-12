@@ -230,3 +230,197 @@
   color: #5a3a2a;
   font-weight: 600;
 }
+
+/* Container Utama Form */
+.order-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+/* Judul Section (Tipe Pesanan & Metode Pembayaran) */
+.order-type p, .payment-method p {
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+/* Container Radio Button */
+.order-type, .payment-method {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Styling Label sebagai Card/Tombol */
+.order-type label, .payment-method label {
+  display: flex;
+  align-items: center;
+  padding: 12px 15px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+/* Sembunyikan Input Radio Asli */
+.order-type input[type="radio"],
+.payment-method input[type="radio"] {
+  margin-right: 12px;
+  width: 18px;
+  height: 18px;
+  accent-color: #ff4757; /* Warna bulat radio saat terpilih */
+}
+
+/* Efek Hover */
+.order-type label:hover, .payment-method label:hover {
+  background-color: #f9f9f9;
+  border-color: #ccc;
+}
+
+/* Styling saat Radio Terpilih (Checked) */
+.order-type label:has(input:checked),
+.payment-method label:has(input:checked) {
+  border-color: #ff4757;
+  background-color: #fff1f2;
+  color: #ff4757;
+}
+
+/* Input Text & Number */
+.order-form input[type="text"],
+.order-form input[type="number"] {
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 16px;
+}
+
+/* Button Styling */
+.order-form button {
+  padding: 12px;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.order-form button:first-of-type {
+  background-color: #ff4757;
+  color: white;
+}
+
+.order-form button:last-of-type {
+  background-color: #f1f2f6;
+  color: #2f3542;
+}
+
+.order-form button:hover {
+  opacity: 0.8;
+}
+
+/* Efek saat tombol loading */
+button.btn-confirm.loading {
+  background-color: #ff8a94 !important; /* Warna lebih pudar */
+  cursor: not-allowed;
+  position: relative;
+}
+
+/* Optional: Tambahkan spinner sederhana di samping teks */
+button.btn-confirm.loading::after {
+  content: "";
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-left: 10px;
+  border: 2px solid white;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Menonaktifkan input saat loading */
+input:disabled {
+  background-color: #f5f5f5;
+  color: #999;
+  cursor: not-allowed;
+}
+
+/* Container Utama */
+.order-page {
+  position: relative;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+/* Background Overlay */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7); /* Hitam transparan */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000; /* Angka tinggi agar menutupi semuanya */
+  backdrop-filter: blur(3px); /* Efek blur halus di belakang overlay */
+}
+
+/* Kotak Pesan */
+.loading-box {
+  background: white;
+  padding: 40px;
+  border-radius: 15px;
+  text-align: center;
+  max-width: 80%;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+}
+
+/* Animasi Spinner */
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid #ff4757; /* Ubah warna sesuai tema brand kamu */
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-box p {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2f3542;
+  margin: 0;
+}
+
+/* Styling tambahan untuk tombol jika loading */
+.btn-confirm.loading {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.btn-add-more {
+  margin-top: 10px;
+  background: none;
+  border: 1px solid #ff4757;
+  color: #ff4757;
+  padding: 10px;
+  width: 100%;
+  border-radius: 8px;
+  cursor: pointer;
+}

@@ -165,7 +165,7 @@ export default function AdminProduct() {
           />
 
           <label>Harga</label>
-          <input type="number" name="price" onChange={handleChange} required />
+          <input type="number" name="price" onChange={handleChange} min="1000" max="100000" required />
 
           <label>Status</label>
           <select name="status" onChange={handleChange}>

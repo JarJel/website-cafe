@@ -1,3 +1,6 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import express from "express"
 import cors from "cors"
 import categoryRoutes from "./backend/routes/category.routes.js"
@@ -5,9 +8,6 @@ import productRoutes from "./backend/routes/product.routes.js"
 import orderRoutes from "./backend/routes/order.routes.js";
 import midtransRoutes from "./backend/routes/midtrans.routes.js";
 import paymentRoutes from "./backend/routes/payment.routes.js";
-import dotenv from "dotenv";
-dotenv.config();
-
 
 const app = express()
 

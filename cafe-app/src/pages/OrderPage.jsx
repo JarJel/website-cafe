@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react"; // Tambahkan useEffect
 import "../Order.css";
 import api from "../services/api";
 
@@ -10,36 +10,74 @@ function OrderPage() {
   const [name, setName] = useState("");
   const [table, setTable] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");
+  const [orderType, setOrderType] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [statusMessage, setStatusMessage] = useState("");
 
-  // Bisa single product atau array cartItems
-  let cartItems = [];
+  // --- TAMBAHKAN USEEFFECT DI SINI ---
+  useEffect(() => {
+    // Cek apakah script sudah ada
+    const midtransScriptUrl = "https://app.sandbox.midtrans.com/snap/snap.js";
+    let script = document.querySelector(`script[src="${midtransScriptUrl}"]`);
+
+    if (!script) {
+      script = document.createElement("script");
+      script.src = midtransScriptUrl;
+      // Ganti dengan Client Key Sandbox Anda
+      script.setAttribute("data-client-key", "Mid-client-PwimocAQvQkhz8tu"); 
+      script.async = true;
+      document.body.appendChild(script);
+    }
+
+    return () => {
+      // Cleanup (opsional): bisa menghapus script saat komponen unmount
+      // document.body.removeChild(script); 
+    };
+  }, []);
 
   if (!state) return <p>Product not found</p>;
 
+  let cartItems = [];
   if (Array.isArray(state.cartItems)) {
     cartItems = state.cartItems;
   } else if (state.product_id) {
-    cartItems = [{ ...state, quantity: 1 }]; // single product dari Order Now
+    cartItems = [{ ...state, quantity: 1 }];
   }
 
-  // Hitung total harga
   const totalPrice = cartItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0,
   );
 
   const handleSubmit = async () => {
-    if (!name || !table || !paymentMethod || cartItems.length === 0) {
-      alert("Lengkapi data order & pembayaran");
+    const tableNum = parseInt(table)
+    if (!name || !paymentMethod || !orderType || cartItems.length === 0) {
+      alert("Lengkapi data order");
       return;
     }
 
+    if (orderType === "dine_in" && !table) {
+      if(!table) {
+        alert("Nomor Meja Wajib Diisi Untuk Dine in");
+        return;
+      }
+    }
+
+    if (isNaN(tableNum) || tableNum < 1 || tableNum >25) {
+      alert("Nomor meja tidak terdaftar");
+      return;
+    }
+
+    setIsLoading(true);
+    setStatusMessage("Memproses pesanan anda...");
+
     try {
-      // 1. Simpan order dulu
+      // 1. Kirim Order ke Backend
       const orderRes = await api.post("/orders", {
         customer_name: name,
-        table_number: table,
+        table_number: orderType === "dine_in" ? parseInt(table) : null,
         payment_method: paymentMethod,
+        order_type: orderType,
         items: cartItems.map((item) => ({
           product_id: item.product_id,
           quantity: item.quantity,
@@ -47,16 +85,16 @@ function OrderPage() {
         })),
       });
 
-      const orderId = orderRes.data.order_id;
+      const orderId = orderRes.data.order_id || orderRes.data.id;
 
-      // 2. Jika CASH
+      // --- LOGIK PEMBAYARAN CASH ---
       if (paymentMethod === "cash") {
-        alert("Order berhasil! Silakan bayar di kasir.");
-        navigate("/");
+        setStatusMessage("Pesanan Berhasil! Silakan bayar di kasir.");
+        setTimeout(() => navigate("/"), 3000);
         return;
       }
 
-      // 3. Jika MIDTRANS
+      // --- LOGIK PEMBAYARAN ONLINE (MIDTRANS) ---
       if (paymentMethod === "midtrans") {
         const payRes = await api.post("/payment", {
           order_id: orderId,
@@ -64,30 +102,48 @@ function OrderPage() {
           customer_name: name,
         });
 
-        console.log("Snap:", window.snap);
-        console.log("Token:", payRes.data.token);
-
-        window.snap.pay(payRes.data.token, {
-          onSuccess: function () {
-            alert("Pembayaran berhasil!");
-            navigate("/");
-          },
-          onPending: function () {
-            alert("Menunggu pembayaran");
-          },
-          onError: function () {
-            alert("Pembayaran gagal");
-          },
-        });
+        // Tunggu sebentar sampai window.snap benar-benar siap
+        if (window.snap) {
+          window.snap.pay(payRes.data.token, {
+            onSuccess: function () {
+              setStatusMessage("Pembayaran Berhasil! Mengalihkan...");
+              setTimeout(() => navigate("/"), 2000);
+            },
+            onPending: function () {
+              setStatusMessage("Menunggu pembayaran anda...");
+            },
+            onError: function () {
+              setStatusMessage("Pembayaran Gagal. Silakan coba lagi.");
+              setIsLoading(false);
+            },
+            onClose: function () {
+              setIsLoading(false);
+            },
+          });
+        } else {
+          throw new Error("Sistem pembayaran (Snap) belum siap. Silakan coba lagi.");
+        }
       }
     } catch (err) {
       console.error(err);
-      alert("Gagal memproses order");
+      const errorMsg = err.response?.data?.message || "Gagal memproses order.";
+      setStatusMessage(errorMsg);
+      setTimeout(() => setIsLoading(false), 2000);
     }
   };
 
   return (
     <div className="order-page">
+      {/* LOADING OVERLAY */}
+      {isLoading && (
+        <div className="loading-overlay">
+          <div className="loading-box">
+            <div className="spinner"></div>
+            <p>{statusMessage}</p>
+          </div>
+        </div>
+      )}
+
       <h2>Konfirmasi Pesanan</h2>
 
       <div className="order-summary">
@@ -107,21 +163,51 @@ function OrderPage() {
       </div>
 
       <div className="order-form">
+        <div className="order-type">
+          <p>Tipe Pesanan</p>
+          <label className={orderType === "dine_in" ? "selected" : ""}>
+            <input
+              type="radio"
+              value="dine_in"
+              checked={orderType === "dine_in"}
+              onChange={(e) => setOrderType(e.target.value)}
+              disabled={isLoading}
+            />
+            Dine In
+          </label>
+          <label className={orderType === "takeaway" ? "selected" : ""}>
+            <input
+              type="radio"
+              value="takeaway"
+              checked={orderType === "takeaway"}
+              onChange={(e) => setOrderType(e.target.value)}
+              disabled={isLoading}
+            />
+            Takeaway
+          </label>
+        </div>
+
         <input
           placeholder="Nama Pemesan"
           value={name}
           onChange={(e) => setName(e.target.value)}
+          disabled={isLoading}
         />
-        <input
-          placeholder="No Meja"
-          type="number"
-          value={table}
-          onChange={(e) => setTable(e.target.value)}
-        />
+
+        {orderType === "dine_in" && (
+          <input
+            placeholder="No Meja 1-25"
+            type="number"
+            min="1"
+            max="25"
+            value={table}
+            onChange={(e) => setTable(e.target.value)}
+            disabled={isLoading}
+          />
+        )}
 
         <div className="payment-method">
           <p>Metode Pembayaran</p>
-
           <label>
             <input
               type="radio"
@@ -129,10 +215,10 @@ function OrderPage() {
               value="cash"
               checked={paymentMethod === "cash"}
               onChange={(e) => setPaymentMethod(e.target.value)}
+              disabled={isLoading}
             />
             Bayar di Kasir
           </label>
-
           <label>
             <input
               type="radio"
@@ -140,13 +226,29 @@ function OrderPage() {
               value="midtrans"
               checked={paymentMethod === "midtrans"}
               onChange={(e) => setPaymentMethod(e.target.value)}
+              disabled={isLoading}
             />
             Bayar Online (QRIS / E-Wallet)
           </label>
         </div>
 
-        <button onClick={handleSubmit}>Confirm Order</button>
-        <button onClick={() => navigate("/")}>Tambah Menu Lagi</button>
+        <button
+          className={`btn-confirm ${isLoading ? "loading" : ""}`}
+          onClick={handleSubmit}
+          disabled={isLoading}
+        >
+          {isLoading ? "Memproses..." : "Confirm Order"}
+        </button>
+
+        <button
+          className="btn-add-more"
+          onClick={() =>
+            navigate("/", { state: { reopenCart: true, cartItems } })
+          }
+          disabled={isLoading}
+        >
+          Tambah Menu Lagi
+        </button>
       </div>
     </div>
   );

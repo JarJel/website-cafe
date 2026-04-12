@@ -4,32 +4,40 @@ import db from "../config/db.js";
 const router = express.Router();
 
 router.post("/notification", async (req, res) => {
-  const notification = req.body;
-
-  const orderId = notification.order_id;
-  const transactionStatus = notification.transaction_status;
-
-  let status = "pending";
-
-  if (transactionStatus === "settlement") {
-    status = "paid";
-  } else if (
-    transactionStatus === "cancel" ||
-    transactionStatus === "expire"
-  ) {
-    status = "failed";
-  }
-
   try {
-    await db.query(
-      "UPDATE orders SET status=? WHERE id=?",
-      [status, orderId.split("-")[1]]
+    const notification = req.body;
+    const orderIdFull = notification.order_id; // Contoh: "ORDER-15-1712456"
+    const transactionStatus = notification.transaction_status;
+
+    // Ambil ID angka saja
+    const realId = orderIdFull.split("-")[1];
+
+    console.log(`--- Webhook Midtrans Datang ---`);
+    console.log(`Order ID: ${realId}, Status: ${transactionStatus}`);
+
+    let status = "pending";
+    if (transactionStatus === "settlement" || transactionStatus === "capture") {
+      status = "paid";
+    } else if (["cancel", "deny", "expire"].includes(transactionStatus)) {
+      status = "failed";
+    }
+
+    // Eksekusi Update
+    const [result] = await db.query(
+      "UPDATE orders SET order_status = ? WHERE order_id = ?",
+      [status, realId]
     );
 
-    res.json({ message: "Notification processed" });
+    if (result.affectedRows > 0) {
+      console.log(`✅ Sukses Update DB: Order ${realId} -> ${status}`);
+    } else {
+      console.log(`⚠️ Gagal Update: Order ID ${realId} tidak ditemukan di DB`);
+    }
+
+    res.status(200).send("OK");
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Gagal update status order" });
+    console.error("❌ WEBHOOK ERROR:", err.message);
+    res.status(500).send("Internal Server Error");
   }
 });
 

@@ -5,7 +5,7 @@ import instagram from "../assets/instagram.png";
 import tiktok from "../assets/tik-tok.png";
 import whatsapp from "../assets/whatsapp.png";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom"; // ✅ tambah useLocation
 import api from "../services/api.js";
 import "../App.css";
 import "../index.css";
@@ -15,16 +15,33 @@ function MainPage() {
   const [selectedCategory, setSelectedCategory] = useState("coffee");
   const [cartItems, setCartItems] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
+  const [loadingId, setLoadingId] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation(); // ✅ ambil location state
+
+  // ✅ Restore cart jika kembali dari OrderPage via "Tambah Menu Lagi"
+  useEffect(() => {
+    if (location.state?.reopenCart && location.state?.cartItems?.length > 0) {
+      setCartItems(location.state.cartItems);
+      setShowPopup(true);
+      // Bersihkan state agar tidak loop saat refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   // Navigasi Order Now
   const handleOrder = (product) => {
+    setLoadingId(product.product_id);
     const item = {
       ...product,
       price: Number(product.price),
       quantity: 1,
     };
-    navigate("/order", { state: { cartItems: [item] } });
+
+    setTimeout(() => {
+      navigate("/order", { state: { cartItems: [item] } });
+      setLoadingId(null);
+    }, 1500);
   };
 
   // Fetch products
@@ -38,7 +55,7 @@ function MainPage() {
   }, []);
 
   const filteredProducts = products.filter(
-    (item) => item.category_name.toLowerCase() === selectedCategory,
+    (item) => item.category_name.toLowerCase() === selectedCategory
   );
 
   // Scroll hide navbar
@@ -64,7 +81,7 @@ function MainPage() {
         return prev.map((i) =>
           i.product_id === product.product_id
             ? { ...i, quantity: i.quantity + 1 }
-            : i,
+            : i
         );
       } else {
         return [
@@ -76,41 +93,37 @@ function MainPage() {
     setShowPopup(true);
   };
 
-  // Fungsi increment quantity
+  // Increment quantity
   const incrementQty = (product_id) => {
     setCartItems((prev) =>
       prev.map((item) =>
         item.product_id === product_id
           ? { ...item, quantity: item.quantity + 1 }
-          : item,
-      ),
+          : item
+      )
     );
   };
 
-  // Fungsi decrement quantity
+  // Decrement quantity
   const decrementQty = (product_id) => {
-    setCartItems(
-      (prev) =>
-        prev
-          .map((item) =>
-            item.product_id === product_id
-              ? { ...item, quantity: item.quantity - 1 }
-              : item,
-          )
-          .filter((item) => item.quantity > 0), // Hapus item jika quantity 0
-    );
-
-    // Jika cartItems kosong setelah decrement, otomatis tutup popup
     setCartItems((prev) => {
-      if (prev.length === 0) setShowPopup(false);
-      return prev;
+      const updated = prev
+        .map((item) =>
+          item.product_id === product_id
+            ? { ...item, quantity: item.quantity - 1 }
+            : item
+        )
+        .filter((item) => item.quantity > 0);
+
+      if (updated.length === 0) setShowPopup(false);
+      return updated;
     });
   };
 
-  // Fungsi untuk menutup popup
+  // Tutup popup & reset cart
   const closePopup = () => {
     setShowPopup(false);
-    setCartItems([]); // reset semua cartItems
+    setCartItems([]);
   };
 
   // Go to order page
@@ -121,7 +134,7 @@ function MainPage() {
   // Hitung total harga
   const totalPrice = cartItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
-    0,
+    0
   );
 
   return (
@@ -196,10 +209,10 @@ function MainPage() {
                 </div>
                 <div className="btn-order">
                   <button
-                    disabled={!isAvailable}
+                    disabled={!isAvailable || loadingId === item.product_id}
                     onClick={() => handleOrder(item)}
                   >
-                    Order Now
+                    {loadingId === item.product_id ? "Loading..." : "Order Now"}
                   </button>
                   <button
                     disabled={!isAvailable}
@@ -234,9 +247,7 @@ function MainPage() {
                       +
                     </button>
                   </div>
-                  <span>
-                    Rp {(item.price * item.quantity).toLocaleString()}
-                  </span>
+                  <span>Rp {(item.price * item.quantity).toLocaleString()}</span>
                 </div>
               ))}
               <hr />
@@ -264,7 +275,7 @@ function MainPage() {
           <h2>OPEN HOURS</h2>
           <p>Mon - Fri : 08.00 - 22.00</p>
           <p>Sat - Sun : 09.00 - 23.00</p>
-        </div>  
+        </div>
         <div className="contact">
           <p>Jl.Kopi No.99A/56</p>
           <p>0821-2081-4298</p>
