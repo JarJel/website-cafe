@@ -9,6 +9,11 @@ router.post("/notification", async (req, res) => {
     const orderIdFull = notification.order_id; // Contoh: "ORDER-15-1712456"
     const transactionStatus = notification.transaction_status;
 
+    if (!orderIdFull) {
+      console.error("❌ order_id tidak ada dari Midtrans");
+      return res.status(400).send("Invalid payload");
+    }
+
     // Ambil ID angka saja
     const realId = orderIdFull.split("-")[1];
 
@@ -25,7 +30,7 @@ router.post("/notification", async (req, res) => {
     // Eksekusi Update
     const [result] = await db.query(
       "UPDATE orders SET order_status = ? WHERE order_id = ?",
-      [status, realId]
+      [status, realId],
     );
 
     if (result.affectedRows > 0) {
