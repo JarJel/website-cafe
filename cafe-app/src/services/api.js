@@ -1,11 +1,12 @@
 import axios from "axios";
+import API_URL from "../config.js";
 
 const api = axios.create({
-  baseURL: "mysql-production-0700.up.railway.app",
+  baseURL: `${API_URL}/api`,
   timeout: 10000,
   headers: {
-    "Content-Type" : "application/json",
-  }
+    "Content-Type": "application/json",
+  },
 });
 
 export default api;
