@@ -73,11 +73,18 @@ function MainPage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const MAX_QUANTITY = 50;
+
   // Add to Cart
   const addToCart = (product) => {
     setCartItems((prev) => {
       const existing = prev.find((i) => i.product_id === product.product_id);
       if (existing) {
+        if (existing.quantity >= MAX_QUANTITY) {
+          alert(`Maksimum quantity adalah ${MAX_QUANTITY}`);
+          return prev;
+        }
+
         return prev.map((i) =>
           i.product_id === product.product_id
             ? { ...i, quantity: i.quantity + 1 }
@@ -98,7 +105,11 @@ function MainPage() {
     setCartItems((prev) =>
       prev.map((item) =>
         item.product_id === product_id
-          ? { ...item, quantity: item.quantity + 1 }
+          ? {
+              ...item,
+              quantity:
+                item.quantity < MAX_QUANTITY ? item.quantity + 1 : item.quantity,
+            }
           : item
       )
     );

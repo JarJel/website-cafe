@@ -13,6 +13,17 @@ function OrderPage() {
   const [orderType, setOrderType] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
+  const [cartItems, setCartItems] = useState([]);
+
+  useEffect(() => {
+    if (!state) return;
+
+    if (Array.isArray(state.cartItems)) {
+      setCartItems(state.cartItems);
+    } else if (state.product_id) {
+      setCartItems([{ ...state, quantity: 1 }]);
+    }
+  }, [state]);
 
   // --- TAMBAHKAN USEEFFECT DI SINI ---
   useEffect(() => {
@@ -37,12 +48,32 @@ function OrderPage() {
 
   if (!state) return <p>Product not found</p>;
 
-  let cartItems = [];
-  if (Array.isArray(state.cartItems)) {
-    cartItems = state.cartItems;
-  } else if (state.product_id) {
-    cartItems = [{ ...state, quantity: 1 }];
-  }
+  const MAX_QUANTITY = 50;
+
+  const incrementQuantity = (productId) => {
+    setCartItems((prev) =>
+      prev.map((item) => {
+        if (item.product_id !== productId) return item;
+
+        if (item.quantity >= MAX_QUANTITY) {
+          alert(`Maksimum quantity adalah ${MAX_QUANTITY}`);
+          return item;
+        }
+
+        return { ...item, quantity: item.quantity + 1 };
+      }),
+    );
+  };
+
+  const decrementQuantity = (productId) => {
+    setCartItems((prev) =>
+      prev.map((item) =>
+        item.product_id === productId
+          ? { ...item, quantity: Math.max(item.quantity - 1, 1) }
+          : item,
+      ),
+    );
+  };
 
   const totalPrice = cartItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -153,6 +184,23 @@ function OrderPage() {
               {item.name || item.product_name} x {item.quantity}
             </span>
             <span>Rp {(item.price * item.quantity).toLocaleString()}</span>
+            <div className="quantity-controls">
+              <button
+                type="button"
+                onClick={() => decrementQuantity(item.product_id)}
+                disabled={isLoading || item.quantity <= 1}
+              >
+                -
+              </button>
+              <span>{item.quantity}</span>
+              <button
+                type="button"
+                onClick={() => incrementQuantity(item.product_id)}
+                disabled={isLoading}
+              >
+                +
+              </button>
+            </div>
           </div>
         ))}
         <hr />
