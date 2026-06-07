@@ -1,32 +1,38 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import express from "express"
-import cors from "cors"
-import categoryRoutes from "./backend/routes/category.routes.js"
-import productRoutes from "./backend/routes/product.routes.js"
+import express from "express";
+import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
+import categoryRoutes from "./backend/routes/category.routes.js";
+import productRoutes from "./backend/routes/product.routes.js";
 import orderRoutes from "./backend/routes/order.routes.js";
 import midtransRoutes from "./backend/routes/midtrans.routes.js";
 import paymentRoutes from "./backend/routes/payment.routes.js";
 
-const app = express()
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-app.use(cors())
-app.use(express.json())
+const app = express();
 
-app.use("/api/categories", categoryRoutes)
-app.use("/api/products", productRoutes)
-app.use("/uploads", express.static("backend/uploads"))
+app.use(cors());
+app.use(express.json());
+
+// API routes
+app.use("/api/categories", categoryRoutes);
+app.use("/api/products", productRoutes);
+app.use("/uploads", express.static("backend/uploads"));
 app.use("/api/orders", orderRoutes);
-app.use("/api/payment", paymentRoutes)
+app.use("/api/payment", paymentRoutes);
 app.use("/api/midtrans", midtransRoutes);
 
-app.get("/api/categories", (req, res) => {
-  res.send("MASUK SINI")
-})
+// ✅ Serve frontend
+app.use(express.static(path.join(__dirname, "dist")));
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "dist", "index.html"));
+});
 
-
-
-app.listen(5000, () => {
-    console.log("Server running on port 5000")
-})
+app.listen(process.env.PORT || 5000, () => {
+  console.log("Server running");
+});
