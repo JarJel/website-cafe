@@ -21,7 +21,11 @@ function MainPage() {
 
   // ✅ Restore cart jika kembali dari OrderPage via "Tambah Menu Lagi"
   useEffect(() => {
-    if (location.state?.reopenCart && location.state?.cartItems?.length > 0) {
+    if (
+      location.state?.reopenCart &&
+      Array.isArray(location.state.cartItems) &&
+      location.state.cartItems.length > 0
+    ) {
       setCartItems(location.state.cartItems);
       setShowPopup(true);
       // Bersihkan state agar tidak loop saat refresh

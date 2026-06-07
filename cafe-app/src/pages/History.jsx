@@ -10,7 +10,7 @@ export default function History() {
     const loadHistory = async () => {
       try {
         const res = await api.get("/orders/history");
-        setOrders(res.data);
+        setOrders(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         console.error("Gagal load history", err);
       } finally {

@@ -24,7 +24,9 @@ export default function AdminProduct() {
   });
 
   useEffect(() => {
-    api.get("/categories").then((res) => setCategories(res.data));
+    api.get("/categories").then((res) =>
+      setCategories(Array.isArray(res.data) ? res.data : []),
+    );
 
     if (editIdParam) {
       setIsEdit(true);
