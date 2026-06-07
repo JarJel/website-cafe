@@ -15,7 +15,9 @@ export const getProducts = async (req, res) => {
     res.json(rows);
   } catch (err) {
     console.error("GET PRODUCTS ERROR:", err);
-    res.status(500).json({ message: "Gagal mengambil produk", error: err.message });
+    res
+      .status(500)
+      .json({ message: "Gagal mengambil produk", error: err.message });
   }
 };
 
@@ -31,8 +33,15 @@ export const createProducts = async (req, res) => {
   `;
 
   try {
-    const [result] = await db.query(sql, [category_id, name, description, price, image, status]);
-    
+    const [result] = await db.query(sql, [
+      category_id,
+      name,
+      description,
+      price,
+      image,
+      status,
+    ]);
+
     res.json({
       message: "Product created",
       product: {
@@ -47,7 +56,9 @@ export const createProducts = async (req, res) => {
     });
   } catch (err) {
     console.error("CREATE PRODUCT ERROR:", err);
-    res.status(500).json({ message: "Gagal membuat produk", error: err.message });
+    res
+      .status(500)
+      .json({ message: "Gagal membuat produk", error: err.message });
   }
 };
 
@@ -63,7 +74,9 @@ export const updateProductStatus = async (req, res) => {
     res.json({ message: "Status updated" });
   } catch (err) {
     console.error("UPDATE STATUS ERROR:", err);
-    res.status(500).json({ message: "Gagal update status", error: err.message });
+    res
+      .status(500)
+      .json({ message: "Gagal update status", error: err.message });
   }
 };
 
@@ -91,6 +104,8 @@ export const updateProduct = async (req, res) => {
     res.json({ message: "Product updated successfully" });
   } catch (err) {
     console.error("UPDATE PRODUCT ERROR:", err);
-    res.status(500).json({ message: "Gagal update produk", error: err.message });
+    res
+      .status(500)
+      .json({ message: "Gagal update produk", error: err.message });
   }
 };

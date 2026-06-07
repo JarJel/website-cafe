@@ -9,9 +9,21 @@ export default function AdminLayout() {
       <aside className="admin-sidebar">
         <h3>ADMIN</h3>
         <ul>
-          <li><Link to="orders">Handle Order</Link></li>
-          <li><Link to="products">Products</Link></li>
-          <li><Link to="history">History</Link></li>
+          <li>
+            <Link to="/admin">Dashboard</Link>
+          </li>
+          <li>
+            <Link to="products">Product List</Link>
+          </li>
+          <li>
+            <Link to="products/add">Add Product</Link>
+          </li>
+          <li>
+            <Link to="orders">Handle Order</Link>
+          </li>
+          <li>
+            <Link to="history">History</Link>
+          </li>
         </ul>
       </aside>
 

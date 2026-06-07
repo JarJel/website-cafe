@@ -21,6 +21,10 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/payment", paymentRoutes)
 app.use("/api/midtrans", midtransRoutes);
 
+app.get("/api/categories", (req, res) => {
+  res.send("MASUK SINI")
+})
+
 
 
 app.listen(5000, () => {

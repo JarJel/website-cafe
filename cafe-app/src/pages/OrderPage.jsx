@@ -56,16 +56,16 @@ function OrderPage() {
       return;
     }
 
-    if (orderType === "dine_in" && !table) {
-      if(!table) {
+    if (orderType === "dine_in") {
+      if (!table) {
         alert("Nomor Meja Wajib Diisi Untuk Dine in");
         return;
       }
-    }
 
-    if (isNaN(tableNum) || tableNum < 1 || tableNum >25) {
-      alert("Nomor meja tidak terdaftar");
-      return;
+      if (isNaN(tableNum) || tableNum < 1 || tableNum > 25) {
+        alert("Nomor meja tidak terdaftar");
+        return;
+      }
     }
 
     setIsLoading(true);
