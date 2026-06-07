@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
-import "../handleOrders.css";
+import "../HandleOrders.css";
 
 export default function HandleOrders() {
   const [orders, setOrders] = useState([]);
