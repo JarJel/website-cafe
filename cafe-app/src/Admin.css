@@ -905,6 +905,23 @@
   color: #ffffff;
 }
 
+.btn-delete {
+  background: transparent;
+  margin-top: 4px;
+  border: 2px solid #dc2626;
+  color: #dc2626;
+  padding: 0.45rem 0.6rem;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-delete:hover {
+  background: #dc2626;
+  color: #ffffff;
+}
+
 /* Make anchor links inside sidebar look tappable */
 .admin-sidebar a {
   display: inline-block;

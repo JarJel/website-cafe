@@ -109,3 +109,20 @@ export const updateProduct = async (req, res) => {
       .json({ message: "Gagal update produk", error: err.message });
   }
 };
+
+/* ================= DELETE PRODUCT ================= */
+export const deleteProduct = async (req, res) => {
+  const { id } = req.params;
+
+  const sql = `DELETE FROM products WHERE product_id = ?`;
+
+  try {
+    await db.query(sql, [id]);
+    res.json({ message: "Product deleted successfully" });
+  } catch (err) {
+    console.error("DELETE PRODUCT ERROR:", err);
+    res
+      .status(500)
+      .json({ message: "Gagal menghapus produk", error: err.message });
+  }
+};

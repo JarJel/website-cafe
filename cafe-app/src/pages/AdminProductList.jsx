@@ -28,6 +28,21 @@ export default function AdminProductList() {
     }
   };
 
+  const handleDeleteProduct = async (productId) => {
+    if (window.confirm("Apakah Anda yakin ingin menghapus produk ini?")) {
+      try {
+        await api.delete(`/products/${productId}`);
+        setProducts((prev) =>
+          prev.filter((p) => p.product_id !== productId)
+        );
+        alert("Produk berhasil dihapus");
+      } catch (err) {
+        console.error(err);
+        alert("Gagal menghapus produk");
+      }
+    }
+  };
+
   const filteredProducts =
     selectedCategory === "all"
       ? products
@@ -70,6 +85,9 @@ export default function AdminProductList() {
             <div style={{ display: "flex", gap: 8 }}>
               <button className="btn-edit" onClick={() => navigate(`add?editId=${p.product_id}`)}>
                 Edit
+              </button>
+              <button className="btn-delete" onClick={() => handleDeleteProduct(p.product_id)}>
+                Hapus
               </button>
             </div>
           </div>
