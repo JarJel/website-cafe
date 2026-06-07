@@ -71,7 +71,7 @@ export default function AdminDashboard() {
     const loadHistory = async () => {
       try {
         const res = await api.get("/orders/history");
-        setOrders(res.data || []);
+        setOrders(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         console.error("Gagal load dashboard data", err);
         setError("Tidak dapat memuat data pendapatan saat ini.");
@@ -93,9 +93,9 @@ export default function AdminDashboard() {
 
     const thisMonthStart = new Date();
     thisMonthStart.setDate(1);
-    const thisMonthOrders = orders.filter(
-      (o) => new Date(o.order_date) >= thisMonthStart,
-    );
+    const thisMonthOrders = Array.isArray(orders)
+      ? orders.filter((o) => new Date(o.order_date) >= thisMonthStart)
+      : [];
     const thisMonthRevenue = thisMonthOrders.reduce(
       (sum, order) => sum + Number(order.total_price || 0),
       0,
@@ -103,9 +103,11 @@ export default function AdminDashboard() {
 
     const today = new Date();
     const todayKey = today.toISOString().slice(0, 10);
-    const todayOrders = orders.filter(
-      (o) => new Date(o.order_date).toISOString().slice(0, 10) === todayKey,
-    );
+    const todayOrders = Array.isArray(orders)
+      ? orders.filter(
+          (o) => new Date(o.order_date).toISOString().slice(0, 10) === todayKey,
+        )
+      : [];
     const todayRevenue = todayOrders.reduce(
       (sum, order) => sum + Number(order.total_price || 0),
       0,
@@ -114,9 +116,11 @@ export default function AdminDashboard() {
     const dates = getLastDays(7);
     const dailyTraffic = dates.map((date) => {
       const dayKey = date.toISOString().slice(0, 10);
-      const dayOrders = orders.filter((order) =>
-        new Date(order.order_date).toISOString().slice(0, 10) === dayKey,
-      );
+      const dayOrders = Array.isArray(orders)
+        ? orders.filter((order) =>
+            new Date(order.order_date).toISOString().slice(0, 10) === dayKey,
+          )
+        : [];
       const dayRevenue = dayOrders.reduce(
         (sum, order) => sum + Number(order.total_price || 0),
         0,

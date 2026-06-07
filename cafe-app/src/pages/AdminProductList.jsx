@@ -12,8 +12,12 @@ export default function AdminProductList() {
   const [selectedCategory, setSelectedCategory] = useState("all");
 
   useEffect(() => {
-    api.get("/categories").then((res) => setCategories(res.data));
-    api.get("/products").then((res) => setProducts(res.data));
+    api.get("/categories").then((res) =>
+      setCategories(Array.isArray(res.data) ? res.data : []),
+    );
+    api.get("/products").then((res) =>
+      setProducts(Array.isArray(res.data) ? res.data : []),
+    );
   }, []);
 
   const handleStatusChange = async (productId, newStatus) => {
@@ -46,7 +50,9 @@ export default function AdminProductList() {
   const filteredProducts =
     selectedCategory === "all"
       ? products
-      : products.filter((p) => p.category_id == selectedCategory);
+      : Array.isArray(products)
+      ? products.filter((p) => p.category_id == selectedCategory)
+      : [];
 
   return (
     <div className="admin-products">

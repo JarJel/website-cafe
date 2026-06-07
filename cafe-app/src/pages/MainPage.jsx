@@ -47,16 +47,18 @@ function MainPage() {
   // Fetch products
   useEffect(() => {
     const fetchProducts = () => {
-      api.get("/products").then((res) => setProducts(res.data));
+      api.get("/products").then((res) =>
+        setProducts(Array.isArray(res.data) ? res.data : []),
+      );
     };
     fetchProducts();
     const interval = setInterval(fetchProducts, 5000);
     return () => clearInterval(interval);
   }, []);
 
-  const filteredProducts = products.filter(
-    (item) => item.category_name.toLowerCase() === selectedCategory
-  );
+  const filteredProducts = Array.isArray(products)
+    ? products.filter((item) => item.category_name.toLowerCase() === selectedCategory)
+    : [];
 
   // Scroll hide navbar
   useEffect(() => {

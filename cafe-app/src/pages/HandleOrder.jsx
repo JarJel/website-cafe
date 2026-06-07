@@ -14,9 +14,9 @@ export default function HandleOrders() {
 
       // FILTER: Hanya ambil yang statusnya BUKAN 'completed'
       // Dengan begitu, yang sudah lunas & diklik selesai akan hilang otomatis
-      const activeOrders = res.data.filter(
-        (order) => order.order_status !== "completed",
-      );
+      const activeOrders = Array.isArray(res.data)
+        ? res.data.filter((order) => order.order_status !== "completed")
+        : [];
 
       const sortedOrders = [...activeOrders].reverse();
       setOrders(sortedOrders);
@@ -68,7 +68,9 @@ export default function HandleOrders() {
       await api.put(`/orders/${orderId}/complete`);
       closeModal();
       // hapus dari list pending di UI
-      setOrders((prev) => prev.filter((o) => o.order_id !== orderId));
+      setOrders((prev) =>
+        Array.isArray(prev) ? prev.filter((o) => o.order_id !== orderId) : [],
+      );
     } catch (err) {
       console.error("Gagal menyelesaikan order:", err);
       alert("Gagal menyelesaikan order");
